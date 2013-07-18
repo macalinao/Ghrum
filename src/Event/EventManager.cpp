@@ -15,6 +15,8 @@
 */
 
 #include <Event/EventManager.hpp>
+#include <Core/IEngineSingleton.hpp>
+#include <Scheduler/TaskManager.hpp>
 
 using namespace Ghrum;
 
@@ -31,8 +33,7 @@ void EventManager::emitEventAsync(Event & event, size_t id) {
     auto delegate(Delegate<void ()>([&]() {
         emitEvent(event, id);
     }));
-    static_cast<TaskManager *>(
-        &IEngineSingleton::getTaskManager() )->asyncTask(delegate);
+    IEngineSingleton::getTaskManager().asyncTask(delegate);
 }
 
 void EventManager::remove(IPlugin & owner) {
@@ -80,7 +81,8 @@ bool EventManager::removeListener(IPlugin & owner, EventListener & listener) {
     return true;
 }
 
-bool EventManager::addDelegate(IPlugin & owner, IEventManager::Function & callback, EventPriority priority, size_t id) {
+bool EventManager::addDelegate(IPlugin & owner, IEventManager::Function & callback,
+                               EventPriority priority, size_t id) {
     // =================== Lock ===================
     std::lock_guard<std::mutex> lock(accessMutexList_);
     // =================== Lock ===================
@@ -96,7 +98,8 @@ bool EventManager::addDelegate(IPlugin & owner, IEventManager::Function & callba
     return isHandled;
 }
 
-bool EventManager::removeDelegate(IPlugin & owner, IEventManager::Function & callback, EventPriority priority, size_t id) {
+bool EventManager::removeDelegate(IPlugin & owner, IEventManager::Function & callback,
+                                  EventPriority priority, size_t id) {
     // =================== Lock ===================
     std::lock_guard<std::mutex> lock(accessMutexList_);
     // =================== Lock ===================

@@ -60,13 +60,14 @@ private:
     /**
      * {@inheritDoc}
      */
-    bool addDelegate(IPlugin & owner, IEventManager::Function & callback, EventPriority priority, size_t id);
+    bool addDelegate(IPlugin & owner, IEventManager::Function & callback,
+                     EventPriority priority, size_t id);
 
     /**
      * {@inheritDoc}
      */
-    bool removeDelegate(IPlugin & owner, IEventManager::Function & callback, EventPriority priority, size_t id);
-
+    bool removeDelegate(IPlugin & owner, IEventManager::Function & callback,
+                        EventPriority priority, size_t id);
 private:
     /**
      * A type definition of a tuple that the manager use.
