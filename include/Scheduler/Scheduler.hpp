@@ -57,7 +57,6 @@ public:
 protected:
     SchedulerWorkerGroup workerGroup_;
     boost::heap::priority_queue<std::shared_ptr<Task>> tasks_;
-    std::vector<std::shared_ptr<Task>> taskAlive_;
 };
 
 }; // namespace Ghrum

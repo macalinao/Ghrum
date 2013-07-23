@@ -24,7 +24,7 @@ using namespace Ghrum;
 // {@see SchedulerWorker::SchedulerWorker} //////////////////////
 /////////////////////////////////////////////////////////////////
 SchedulerWorker::SchedulerWorker(boost::asio::io_service * service)
-    : service_(service), busy_(false), available_(true), thread_(
+    : service_(service), available_(true), thread_(
         new boost::thread(Delegate<void()>(this, &SchedulerWorker::run))) {
 }
 

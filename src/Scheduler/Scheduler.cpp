@@ -52,7 +52,7 @@ void Scheduler::execute() {
         while (isExecuted && !tasks_.empty()) {
             // Peek the first task and the one that is closest
             // to be executed.
-            std::shared_ptr<Task> task = tasks_.top();
+            const std::shared_ptr<Task> & task = tasks_.top();
             isExecuted = (uptime_ >= task->getTickTime());
             if (isExecuted) {
                 tasks_.pop();
@@ -80,7 +80,7 @@ void Scheduler::execute() {
 
             // Get the task and execute the handler and execute
             // the task handler.
-            std::shared_ptr<Task> task = syncQueue.front();
+            const std::shared_ptr<Task> & task = syncQueue.front();
             task->getFunction()();
             task->setTickTime(uptime_ + task->getPeriodTime());
 

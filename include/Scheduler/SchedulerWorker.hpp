@@ -67,13 +67,6 @@ public:
     }
 
     /**
-     * Return if the worker is currently busy.
-     */
-    inline bool isBusy() {
-        return busy_;
-    }
-
-    /**
      * Return if the worker is available.
      */
     inline bool isAvailable() {
@@ -89,7 +82,7 @@ public:
 private:
     std::unique_ptr<boost::thread> thread_;
     boost::asio::io_service * service_;
-    bool busy_, available_;
+    bool available_;
     size_t uptime_;
 };
 
