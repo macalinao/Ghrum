@@ -27,7 +27,7 @@ void run(std::string & mode) {
     // Initialize and populate the engine class and
     // descriptor, also the global singleton of it.
     std::unique_ptr<Ghrum::GhrumEngine> engine;
-    if (mode.compare("server")) {
+    if (mode.compare("server") == 0) {
         engine = std::unique_ptr<Ghrum::GhrumEngine>(
                      new Ghrum::GhrumEngineServer());
     } else {
