@@ -1,75 +1,80 @@
 /*
-* Copyright (c) 2013 Ghrum Inc.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright (c) 2013 Ghrum Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #ifndef _PLUGIN_ASSEMBLY_HPP_
 #define _PLUGIN_ASSEMBLY_HPP_
 
-#include "Plugin.hpp"
+#include <Plugin/IPlugin.hpp>
+
 #ifdef _WINDOWS_
-#include <windows.h>
+/**/ #include <windows.h>
+/**/
+/**/ typedef HMODULE Module;
 #else
-#include <dlfcn.h>
-#endif
+/**/ #include <dlfcn.h>
+/**/
+/**/ typedef void * Module;
+#endif // _WINDOWS_
 
 namespace Ghrum {
 
 /**
- * Implementation of {@see Plugin} for assembly plugins.
+ * Implementation of {@see IPlugin} for assembly plugins.
  *
  * @author Agustin Alvarez <wolftein@ghrum.org>
  */
-class PluginAssembly : public Plugin {
+class PluginAssembly : public IPlugin {
 private:
     /**
      * Definition for any plugin entry function.
      */
-    typedef void (* Function)(IPlugin &);
+    typedef void (* Function)(Ghrum::IPlugin &);
 public:
     /**
-     * Default constructor.
+     * Default constructor of the plugin class.
      *
-     * @param folder the folder
      * @param descriptor the descriptor
      */
-    PluginAssembly(std::string & folder, PluginDescriptor & descriptor);
+    PluginAssembly(PluginDescriptor & descriptor);
 
     /**
-     * Default destructor.
+     * Destructor will dispose the library handler.
      */
     ~PluginAssembly();
 public:
     /**
      * {@inheritDoc}
      */
-    void onLoad();
+    void handleOnLoad();
 
     /**
      * {@inheritDoc}
      */
-    void onDisable();
+    void handleOnDisable();
 
     /**
      * {@inheritDoc}
      */
-    void onEnable();
+    void handleOnEnable();
+
+    /**
+     * {@inheritDoc}
+     */
+    void handleOnUnload();
 protected:
-#ifdef _WINDOWS_
     Module handle_;
-#else
-    void * handle_;
-#endif // _WINDOWS_
     Function fnLoad_, fnEnable_, fnDisable_;
 };
 

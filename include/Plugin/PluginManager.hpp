@@ -1,23 +1,24 @@
 /*
-* Copyright (c) 2013 Ghrum Inc.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright (c) 2013 Ghrum Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #ifndef _PLUGIN_MANAGER_HPP_
 #define _PLUGIN_MANAGER_HPP_
 
-#include "Plugin.hpp"
 #include <Plugin/IPluginManager.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+#include <boost/property_tree/detail/xml_parser_error.hpp>
 
 namespace Ghrum {
 
@@ -29,14 +30,17 @@ namespace Ghrum {
 class PluginManager : public IPluginManager {
 public:
     /**
-     * Default constructor.
+     * Parse the plugin descriptor, given the property file.
+     *
+     * @param tree the tree to parse from.
+     * @param descriptor the descriptor to populate.
      */
-    PluginManager();
-
+    void getFileDescriptor(boost::property_tree::ptree & tree, PluginDescriptor & descriptor);
+public:
     /**
      * {@inheritDoc}
      */
-    IPlugin * getPlugin(const std::string & name);
+    bool exist(const std::string & name);
 
     /**
      * {@inheritDoc}
@@ -49,7 +53,7 @@ public:
     void unload(IPlugin & plugin);
 
     /**
-     * Unload all plugins.
+     * {@inheritDoc}
      */
     void unloadAll();
 
@@ -59,9 +63,7 @@ public:
     void enable(IPlugin & plugin);
 
     /**
-     * Enable all plugin that is marked as loaded.
-     *
-     * @param order the order of which the plugins are loaded.
+     * {@inheritDoc}
      */
     void enableAll(PluginOrder order);
 
@@ -71,9 +73,24 @@ public:
     void disable(IPlugin & plugin);
 
     /**
-     * Disable all plugins.
+     * {@inheritDoc}
      */
     void disableAll();
+
+    /**
+     * {@inheritDoc}
+     */
+    void reload(IPlugin & plugin);
+
+    /**
+     * {@inheritDoc}
+     */
+    void reloadAll();
+
+    /**
+     * {@inheritDoc}
+     */
+    IPlugin & getPlugin(const std::string & name);
 
     /**
      * {@inheritDoc}
@@ -81,14 +98,12 @@ public:
     std::vector<IPlugin *> getPlugins();
 
     /**
-     * Find every plugin available for loading given the
-     * current order to load.
+     * {@inheritDoc}
      */
-    void findAvailable();
+    size_t findAvailable();
 protected:
-    std::string folder_;
-    std::mutex accessMutexList_;
-    std::unordered_map<std::string, std::shared_ptr<Plugin>> plugins_;
+    boost::mutex accessMutexList_;
+    std::unordered_map<std::string, std::unique_ptr<IPlugin>> plugins_;
 };
 
 }; // namespace Ghrum
