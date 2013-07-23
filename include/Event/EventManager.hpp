@@ -60,6 +60,11 @@ private:
     /**
      * {@inheritDoc}
      */
+    void emitEventAsync(Event & event, Function function, size_t id);
+
+    /**
+     * {@inheritDoc}
+     */
     bool addDelegate(IPlugin & owner, IEventManager::Function & callback, EventPriority priority, size_t id);
 
     /**
