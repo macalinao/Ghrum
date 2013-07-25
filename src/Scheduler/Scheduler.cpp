@@ -39,6 +39,11 @@ void Scheduler::execute() {
     // Start the execution of the scheduler.
     active_ = true;
 
+    // Start the execution of all workers.
+    BOOST_LOG_TRIVIAL(info)
+            << "Executing scheduler with " << thread_ << " workers.";
+    workerGroup_.start(thread_);
+
     // Run the scheduler as long as it is active
     // and enabled.
     do {

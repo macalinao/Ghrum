@@ -41,7 +41,7 @@ void run(std::string & mode) {
     engine->initialize();
 
     // Run into the scheduler's main loop.
-    BOOST_LOG_TRIVIAL(info) << "Executing stdcheduler main loop.";
+    BOOST_LOG_TRIVIAL(info) << "Executing stcheduler main loop.";
     static_cast<Ghrum::Scheduler &>(engine->getScheduler()).execute();
 
     // Dispose every engine's component allocated.
