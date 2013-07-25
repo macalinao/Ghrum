@@ -24,8 +24,8 @@ using namespace Ghrum;
 // {@see Scheduler::Scheduler} //////////////////////////////////
 /////////////////////////////////////////////////////////////////
 Scheduler::Scheduler()
-    : workerGroup_(
-        boost::thread::hardware_concurrency() * SCHEDULER_THREAD_FACTOR) {
+    : active_(false), overloaded_(false), uptime_(0), iterationPerSecond_(60),
+      thread_(boost::thread::hardware_concurrency()) {
 }
 
 /////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ Scheduler::Scheduler()
 /////////////////////////////////////////////////////////////////
 void Scheduler::execute() {
     std::queue<std::shared_ptr<Task>> queue;
-    size_t nextTickTime = SCHEDULER_TICK_PER_SECOND;
+    size_t nextTickTime = iterationPerSecond_;
     auto start = std::chrono::steady_clock::now();
 
     // Start the execution of the scheduler.
@@ -41,7 +41,11 @@ void Scheduler::execute() {
 
     // Run the scheduler as long as it is active
     // and enabled.
-    while (active_) {
+    do {
+        // =================== Lock ===================
+        mutex_.lock();
+        // =================== Lock ===================
+
         // Execute the first and all the available task
         // on the current tick, if the first function
         // cannot be executed, then don't execute others
@@ -53,30 +57,29 @@ void Scheduler::execute() {
             // to be executed.
             const std::shared_ptr<Task> & task = tasks_.top();
             isExecuted = (uptime_ >= task->getTickTime());
-            if (isExecuted) {
-                tasks_.pop();
-                // If the task is parallel, then schedule to run
-                // it off over a parallel task, parallel task are
-                // not locked into the main thread, if the task
-                // is syncronized, then push it back into a syncronized
-                // task to be schedule on the main thread after executing
-                // all available tasks.
+
+            // Check if the task can be executed.
+            if (isExecuted && task->isAlive()) {
                 if (task->isParallel()) {
-                    workerGroup_.push(TaskHandler(task));
+                    workerGroup_.push(
+                        TaskWrapper(task));
                 } else {
                     queue.push(task);
                 }
-            } else if (task->isAlive() == false) {
                 tasks_.pop();
-            }
+            } else if (!task->isAlive())
+                tasks_.pop();
         }
+
+        // =================== Unlock ===================
+        mutex_.unlock();
+        // =================== Unlock ===================
 
         // Execute all syncronized task availabled found previusly,
         // if the scheduler is overloaded, then it will deferred tasks acording
         // to the task priority given for each task, higher level, means lower
         // deferring time.
         while (!queue.empty()) {
-
             // Get the task and execute the handler and execute
             // the task handler.
             const std::shared_ptr<Task> & task = queue.front();
@@ -86,6 +89,9 @@ void Scheduler::execute() {
             // after executing the task, if the task was marked to repeat,
             // then add it back into the task priority quere, otherwise stop it.
             if (task->isAlive() && task->isReapeating()) {
+                // =================== Lock ===================
+                std::lock_guard<std::mutex> lock(mutex_);
+                // =================== Lock ===================
                 tasks_.push(task);
             }
             queue.pop();
@@ -96,23 +102,24 @@ void Scheduler::execute() {
 
             // Update the next ticking values, the next check will
             // be LAST_TICK + TICK_PER_SECOND.
-            nextTickTime = uptime_ + SCHEDULER_TICK_PER_SECOND;
+            nextTickTime = uptime_ + iterationPerSecond_;
 
             // Check how much left we have.
             auto end = std::chrono::steady_clock::now();
             auto difference = end - start;
             auto time = std::chrono::duration_cast<std::chrono::milliseconds>(difference).count();
-
-            if (time >= SCHEDULER_TICK_SECOND) {
+            if (time >= MILLISECOND_TICK) {
                 overloaded_ = true;
             } else {
                 overloaded_ = false;
                 std::this_thread::sleep_for(
-                    std::chrono::milliseconds(SCHEDULER_TICK_SECOND - time));
+                    std::chrono::milliseconds(MILLISECOND_TICK - time));
             }
             start = std::chrono::steady_clock::now();
         }
-    }
+    } while (active_);
+
+    // Wait and dispose every thread created.
     workerGroup_.joinAll();
 }
 
@@ -141,14 +148,21 @@ size_t Scheduler::getUptime() {
 // {@see Scheduler::getThreadCount} /////////////////////////////
 /////////////////////////////////////////////////////////////////
 size_t Scheduler::getThreadCount() {
-    return boost::thread::hardware_concurrency() * SCHEDULER_THREAD_FACTOR;
+    return thread_;
 }
 
 /////////////////////////////////////////////////////////////////
 // {@see Scheduler::getIterationPerSecond} //////////////////////
 /////////////////////////////////////////////////////////////////
 size_t Scheduler::getIterationPerSecond() {
-    return SCHEDULER_TICK_PER_SECOND;
+    return iterationPerSecond_;
+}
+
+/////////////////////////////////////////////////////////////////
+// {@see Scheduler::setIterationPerSecond} //////////////////////
+/////////////////////////////////////////////////////////////////
+void Scheduler::setIterationPerSecond(size_t iteration) {
+    iterationPerSecond_ = iteration;
 }
 
 /////////////////////////////////////////////////////////////////
@@ -156,8 +170,7 @@ size_t Scheduler::getIterationPerSecond() {
 /////////////////////////////////////////////////////////////////
 void Scheduler::cancel(IPlugin & owner) {
     for (auto task : tasks_)
-        if (task->getOwner() != nullptr
-                && task->getOwner()->getId() == owner.getId())
+        if (task->getOwner() != nullptr && task->getOwner()->getId() == owner.getId())
             task->setCancelled();
 }
 
@@ -170,14 +183,49 @@ void Scheduler::cancelAll() {
 }
 
 /////////////////////////////////////////////////////////////////
-// {@see Scheduler::Scheduler} //////////////////////////////////
+// {@see Scheduler::syncRepeatingTask} //////////////////////////
 /////////////////////////////////////////////////////////////////
-ITask & Scheduler::addTask(IPlugin * owner, Delegate<void()> callback, TaskPriority priority, uint32_t delay, uint32_t period,
-                           bool isParallel) {
-    // Create a new pointer to the new task, the task will be disposed by a
-    // auto shared_ptr after its released from the container.
-    std::shared_ptr<Task> task = std::make_shared<Task>(owner, callback, period, isParallel);
+ITask & Scheduler::syncRepeatingTask(IPlugin & owner, Delegate<void()> callback, TaskPriority priority, uint32_t delay,
+                                     uint32_t period) {
+    // =================== Lock ===================
+    std::lock_guard<std::mutex> lock(mutex_);
+    // =================== Lock ===================
+
+    std::shared_ptr<Task> task
+        = std::make_shared<Task>(&owner, callback, period, false);
     task->setTickTime(uptime_ + delay, overloaded_);
+    task->setPriority(priority);
+    tasks_.push(task);
+    return static_cast<ITask &>(*task);
+}
+
+/////////////////////////////////////////////////////////////////
+// {@see Scheduler::asyncDelayedTask} ///////////////////////////
+/////////////////////////////////////////////////////////////////
+ITask & Scheduler::asyncDelayedTask(IPlugin & owner, Delegate<void()> callback, TaskPriority priority, uint32_t delay) {
+    // =================== Lock ===================
+    std::lock_guard<std::mutex> lock(mutex_);
+    // =================== Lock ===================
+
+    std::shared_ptr<Task> task
+        = std::make_shared<Task>(&owner, callback, 0, true);
+    task->setTickTime(uptime_ + delay, overloaded_);
+    task->setPriority(priority);
+    tasks_.push(task);
+    return static_cast<ITask &>(*task);
+}
+
+/////////////////////////////////////////////////////////////////
+// {@see Scheduler::asyncAnonymousTask} /////////////////////////
+/////////////////////////////////////////////////////////////////
+ITask & Scheduler::asyncAnonymousTask(Delegate<void()> callback, TaskPriority priority) {
+    // =================== Lock ===================
+    std::lock_guard<std::mutex> lock(mutex_);
+    // =================== Lock ===================
+
+    std::shared_ptr<Task> task
+        = std::make_shared<Task>(nullptr, callback, 0, true);
+    task->setTickTime(uptime_, overloaded_);
     task->setPriority(priority);
     tasks_.push(task);
     return static_cast<ITask &>(*task);

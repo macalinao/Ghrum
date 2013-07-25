@@ -59,20 +59,20 @@ void SchedulerWorker::run() {
     // this worker to not been active any more by joining it.
     while (available_) {
         try {
-            // Start the tick time.
-            auto start = std::chrono::steady_clock::now();
-
             // Poll the io_service once from the worker, if
             // we had work, then add tick count into uptime.
-            if ( service_->poll_one(errorCode) ) {
-                uptime_ += std::chrono::duration_cast<std::chrono::milliseconds>(
-                               std::chrono::steady_clock::now() - start).count();
-            }
+            service_->poll_one(errorCode);
+
             // Check if there was an error.
             if (errorCode) {
                 BOOST_LOG_TRIVIAL(error)
                         << "Worker has trigger an exception: " << errorCode.message();
             }
+
+            // Sleep 10 millisecond.
+            boost::this_thread::sleep(
+                boost::posix_time::milliseconds(10));
+
             // Check for interrupt handler.
             boost::this_thread::interruption_point();
         } catch (std::exception & ex) {
@@ -91,11 +91,4 @@ void SchedulerWorker::run() {
 /////////////////////////////////////////////////////////////////
 void SchedulerWorker::join() {
     thread_->join();
-}
-
-/////////////////////////////////////////////////////////////////
-// {@see SchedulerWorker::getUptime} ////////////////////////////
-/////////////////////////////////////////////////////////////////
-size_t SchedulerWorker::getUptime() {
-    return uptime_;
 }

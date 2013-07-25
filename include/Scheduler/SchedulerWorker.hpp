@@ -16,7 +16,6 @@
 #ifndef _SCHEDULER_WORKER_HPP_
 #define _SCHEDULER_WORKER_HPP_
 
-#include <Scheduler/ISchedulerWorker.hpp>
 #include <Utilities/Delegate.hpp>
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
@@ -28,7 +27,7 @@ namespace Ghrum {
  *
  * @author Agustin Alvarez <wolftein@ghrum.org>
  */
-class SchedulerWorker : public ISchedulerWorker {
+class SchedulerWorker {
 public:
     /**
      * Default constructor of the worker.
@@ -62,16 +61,10 @@ public:
      * Join the worker until the worker ends its last task.
      */
     void join();
-
-    /**
-     * {@inheritDoc}
-     */
-    size_t getUptime();
 private:
     std::unique_ptr<boost::thread> thread_;
     boost::asio::io_service * service_;
     bool available_;
-    size_t uptime_;
 };
 
 }; // namespace Ghrum

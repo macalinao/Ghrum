@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef _TASK_HANDLER_HPP_
-#define _TASK_HANDLER_HPP_
+#ifndef _TASK_WRAPPER_HPP_
+#define _TASK_WRAPPER_HPP_
 
 #include "Task.hpp"
 
@@ -25,14 +25,14 @@ namespace Ghrum {
  *
  * @author Agustin Alvarez <wolftein@ghrum.org>
  */
-class TaskHandler {
+class TaskWrapper {
 public:
     /**
      * Default constructor of the wrapper handler.
      *
      * @param task a shared pointer to the task handler
      */
-    TaskHandler(std::shared_ptr<Task> task)
+    TaskWrapper(std::shared_ptr<Task> task)
         : task_(task) {
     }
 
@@ -48,4 +48,4 @@ private:
 
 }; // namespace Ghrum
 
-#endif // _TASK_HANDLER_HPP_
+#endif // _TASK_WRAPPER_HPP_

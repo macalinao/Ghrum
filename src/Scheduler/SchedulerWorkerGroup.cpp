@@ -22,14 +22,9 @@ using namespace Ghrum;
 /////////////////////////////////////////////////////////////////
 // {@see SchedulerWorkerGroup::SchedulerWorkerGroup} ////////////
 /////////////////////////////////////////////////////////////////
-SchedulerWorkerGroup::SchedulerWorkerGroup(size_t threadSize)
+SchedulerWorkerGroup::SchedulerWorkerGroup()
     : service_(), work_(
         new boost::asio::io_service::work(service_)) {
-    // Create all the workers and bind it to
-    // a dedicate thread.
-    for (size_t i = 0; i < threadSize; i++)
-        workers_.push_back(std::unique_ptr<SchedulerWorker>(
-                               new SchedulerWorker(&service_)));
 }
 
 /////////////////////////////////////////////////////////////////
@@ -37,6 +32,15 @@ SchedulerWorkerGroup::SchedulerWorkerGroup(size_t threadSize)
 /////////////////////////////////////////////////////////////////
 SchedulerWorkerGroup::~SchedulerWorkerGroup() {
     joinAll();
+}
+
+/////////////////////////////////////////////////////////////////
+// {@see SchedulerWorkerGroup::start} ///////////////////////////
+/////////////////////////////////////////////////////////////////
+void SchedulerWorkerGroup::start(size_t threadSize) {
+    for (size_t i = 0; i < threadSize; i++)
+        workers_.push_back(std::unique_ptr<SchedulerWorker>(
+                               new SchedulerWorker(&service_)));
 }
 
 /////////////////////////////////////////////////////////////////
@@ -51,4 +55,11 @@ void SchedulerWorkerGroup::joinAll() {
     }
     work_.reset();
     service_.run();
+}
+
+/////////////////////////////////////////////////////////////////
+// {@see SchedulerWorkerGroup::push} ////////////////////////////
+/////////////////////////////////////////////////////////////////
+void SchedulerWorkerGroup::push(TaskWrapper handler) {
+    service_.post(handler);
 }

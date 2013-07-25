@@ -24,26 +24,6 @@
 namespace Ghrum {
 
 /**
- * Define the thread core factor.
- */
-#define SCHEDULER_THREAD_FACTOR 3
-
-/**
- * Declare a second.
- */
-#define SCHEDULER_TICK_SECOND 1000
-
-/**
- * Define number of ticks per second.
- */
-#define SCHEDULER_TICK_PER_SECOND 60
-
-/**
- * Define the normal time that should consume per TICK_SECOND
- */
-#define SCHEDULER_TIME SCHEDULER_TICK_SECOND / SCHEDULER_TICK_PER_SECOND
-
-/**
  * Implementation of {@see IScheduler}.
  *
  * @author Agustin Alvarez <wolftein@ghrum.org>
@@ -88,6 +68,11 @@ public:
     /**
      * {@inheritDoc}
      */
+    void setIterationPerSecond(size_t iterations);
+
+    /**
+     * {@inheritDoc}
+     */
     void cancel(IPlugin & owner);
 
     /**
@@ -98,12 +83,23 @@ public:
     /**
      * {@inheritDoc}
      */
-    ITask & addTask(IPlugin * owner, Delegate<void()> callback, TaskPriority priority, uint32_t delay, uint32_t period,
-                    bool isParallel);
+    ITask & syncRepeatingTask(IPlugin & owner, Delegate<void()> callback,TaskPriority priority, uint32_t delay,
+                              uint32_t period);
+
+    /**
+     * {@inheritDoc}
+     */
+    ITask & asyncDelayedTask(IPlugin & owner, Delegate<void()> callback, TaskPriority priority, uint32_t delay);
+
+    /**
+     * {@inheritDoc}
+     */
+    ITask & asyncAnonymousTask(Delegate<void()> callback, TaskPriority priority);
 protected:
     bool active_, overloaded_;
-    size_t uptime_;
+    size_t uptime_, thread_, iterationPerSecond_;
     SchedulerWorkerGroup workerGroup_;
+    std::mutex mutex_;
     boost::heap::priority_queue<std::shared_ptr<Task>> tasks_;
 };
 

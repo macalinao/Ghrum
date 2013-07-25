@@ -17,7 +17,7 @@
 #define _SCHEDULER_WORKER_GROUP_HPP_
 
 #include "SchedulerWorker.hpp"
-#include "TaskHandler.hpp"
+#include "TaskWrapper.hpp"
 
 namespace Ghrum {
 
@@ -29,16 +29,22 @@ namespace Ghrum {
 class SchedulerWorkerGroup {
 public:
     /**
-     * Construct a pool of workers.
-     *
-     * @param threadSize number of workers
+     * Default constructor of the group.
      */
-    SchedulerWorkerGroup(size_t threadSize);
+    SchedulerWorkerGroup();
 
     /**
      * Destructor of the group.
      */
     ~SchedulerWorkerGroup();
+
+    /**
+     * Start the worker group with a number of given
+     * threads.
+     *
+     * @param threadSize the amount of thread
+     */
+    void start(size_t threadSize);
 
     /**
      * Join every worker, will wait for every worker
@@ -51,9 +57,7 @@ public:
      *
      * @handler the completation handler
      */
-    inline void push(TaskHandler handler) {
-        service_.post(handler);
-    }
+    void push(TaskWrapper handler);
 private:
     boost::asio::io_service service_;
     std::unique_ptr<boost::asio::io_service::work> work_;
