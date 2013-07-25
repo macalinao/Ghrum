@@ -24,7 +24,8 @@ using namespace Ghrum;
 // {@see PluginAssembly::PluginAssembly} ////////////////////////
 /////////////////////////////////////////////////////////////////
 PluginAssembly::PluginAssembly(std::string & folder, PluginDescriptor & descriptor)
-    : Plugin(folder, descriptor), handle_(nullptr) {
+    : Plugin(folder, descriptor), handle_(nullptr), fnEnable_(nullptr),
+      fnDisable_(nullptr), fnLoad_(nullptr) {
 }
 
 /////////////////////////////////////////////////////////////////

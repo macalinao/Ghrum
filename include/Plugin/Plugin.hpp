@@ -87,7 +87,7 @@ public:
     /**
      * {@inheritDoc}
      */
-    size_t getId();
+    size_t getId() const;
 
     /**
      * {@inheritDoc}

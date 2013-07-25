@@ -15,6 +15,7 @@
  */
 
 #include <Scheduler/Task.hpp>
+#include <Types.hpp>
 
 using namespace Ghrum;
 
@@ -30,7 +31,7 @@ Task::Task(IPlugin * owner, Delegate<void()> callback, size_t period, bool isPar
 // {@see Task::operator<} ///////////////////////////////////////
 /////////////////////////////////////////////////////////////////
 bool Task::operator<(const Task & rhs) {
-    return (tick_ == rhs.tick_ ? (priority_ < rhs.priority_) : (tick_ > rhs.tick_));
+    return (tick_ == rhs.tick_ ? (priority_ > rhs.priority_) : (tick_ < rhs.tick_));
 }
 
 /////////////////////////////////////////////////////////////////
@@ -57,7 +58,7 @@ size_t Task::getTickTime() {
 /////////////////////////////////////////////////////////////////
 // {@see Task::getOwner} ////////////////////////////////////////
 /////////////////////////////////////////////////////////////////
-IPlugin * Task::getOwner() {
+IPlugin const * Task::getOwner() const {
     return owner_;
 }
 

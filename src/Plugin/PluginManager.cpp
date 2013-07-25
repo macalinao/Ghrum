@@ -79,11 +79,11 @@ size_t PluginManager::findAndLoad() {
 
         // Load the plugin.
         std::string name = entry.leaf().string();
-        BOOST_LOG_TRIVIAL(info) << "Found plugin with name: " << name;
+        BOOST_LOG_TRIVIAL(info) << "[*] <PluginManager> Found " << name;
 
         // Try to load the plugin from the file.
         if (!load(name))
-            BOOST_LOG_TRIVIAL(error) << "Trying to load the plugin: " << name;
+            BOOST_LOG_TRIVIAL(warning) << "[!!] <PluginManager> Cannot load " << name;
         else
             index++;
     }
@@ -150,7 +150,7 @@ bool PluginManager::load(const std::string & name) {
                          new PluginAssembly(folder, descriptor));
         } else if (descriptor.Type == PluginType::Javascript) {
             BOOST_LOG_TRIVIAL(error)
-                    << "Javascript is not supported yet.";
+                    << "[E] Javascript is not supported yet.";
             return false;
             // < ==================> TODO: Javascript Plugin <========================== >
             // < ==================> TODO: Javascript Plugin <========================== >

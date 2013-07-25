@@ -14,39 +14,38 @@
  * limitations under the License.
  */
 
-#include <Scheduler/SchedulerWorkerGroup.hpp>
-#include <Types.hpp>
+#include <Scheduler/TaskWorkerGroup.hpp>
 
 using namespace Ghrum;
 
 /////////////////////////////////////////////////////////////////
-// {@see SchedulerWorkerGroup::SchedulerWorkerGroup} ////////////
+// {@see TaskWorkerGroup::TaskWorkerGroup} //////////////////////
 /////////////////////////////////////////////////////////////////
-SchedulerWorkerGroup::SchedulerWorkerGroup()
+TaskWorkerGroup::TaskWorkerGroup()
     : service_(), work_(
         new boost::asio::io_service::work(service_)) {
 }
 
 /////////////////////////////////////////////////////////////////
-// {@see SchedulerWorkerGroup::~SchedulerWorkerGroup} ///////////
+// {@see TaskWorkerGroup::~TaskWorkerGroup} /////////////////////
 /////////////////////////////////////////////////////////////////
-SchedulerWorkerGroup::~SchedulerWorkerGroup() {
+TaskWorkerGroup::~TaskWorkerGroup() {
     joinAll();
 }
 
 /////////////////////////////////////////////////////////////////
-// {@see SchedulerWorkerGroup::start} ///////////////////////////
+// {@see TaskWorkerGroup::start} ////////////////////////////////
 /////////////////////////////////////////////////////////////////
-void SchedulerWorkerGroup::start(size_t threadSize) {
+void TaskWorkerGroup::start(size_t threadSize) {
     for (size_t i = 0; i < threadSize; i++)
-        workers_.push_back(std::unique_ptr<SchedulerWorker>(
-                               new SchedulerWorker(&service_)));
+        workers_.push_back(std::unique_ptr<TaskWorker>(
+                               new TaskWorker(&service_)));
 }
 
 /////////////////////////////////////////////////////////////////
-// {@see SchedulerWorkerGroup::joinAll} /////////////////////////
+// {@see TaskWorkerGroup::joinAll} //////////////////////////////
 /////////////////////////////////////////////////////////////////
-void SchedulerWorkerGroup::joinAll() {
+void TaskWorkerGroup::joinAll() {
     for (size_t i = 0; i < workers_.size(); i++) {
         workers_[i]->setCancelled();
     }
@@ -58,8 +57,10 @@ void SchedulerWorkerGroup::joinAll() {
 }
 
 /////////////////////////////////////////////////////////////////
-// {@see SchedulerWorkerGroup::push} ////////////////////////////
+// {@see TaskWorkerGroup::push} ////////////////////////////////
 /////////////////////////////////////////////////////////////////
-void SchedulerWorkerGroup::push(TaskWrapper handler) {
-    service_.post(handler);
+void TaskWorkerGroup::push(std::shared_ptr<Task> task) {
+    service_.post([task] {
+        static_cast<Task &>(*task)();
+    });
 }

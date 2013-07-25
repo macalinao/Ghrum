@@ -32,12 +32,11 @@ void GhrumEngine::initialize() {
 
     // Find every plugin available for the current
     // platform mode.
-    BOOST_LOG_TRIVIAL(info) << "Searching for plugins.";
+    BOOST_LOG_TRIVIAL(info) << "[*] Searching for plugins.";
     pluginManager_->findAndLoad();
 
     // Enabled those plugin that are marked to initialize before
     // the world generation, this plugins are named as core plugins.
-    BOOST_LOG_TRIVIAL(info) << "Enabling OnInitialize plugins.";
     pluginManager_->enableAll(PluginOrder::OnInitialize);
 
     // Generate and load the current world.
@@ -45,7 +44,6 @@ void GhrumEngine::initialize() {
 
     // Enable those plugins that are marked to initialize after
     // the world generation.
-    BOOST_LOG_TRIVIAL(info) << "Enabling OnWorld plugins.";
     pluginManager_->enableAll(PluginOrder::OnWorld);
 }
 

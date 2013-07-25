@@ -17,7 +17,6 @@
 #define _TASK_HPP_
 
 #include <Scheduler/ITask.hpp>
-#include <Plugin/IPlugin.hpp>
 #include <Utilities/Delegate.hpp>
 
 namespace Ghrum {
@@ -70,9 +69,9 @@ public:
     size_t getTickTime();
 
     /**
-     * Gets the owner of the task.
+     * {@inheritDoc}
      */
-    IPlugin * getOwner();
+    IPlugin const * getOwner() const;
 
     /**
      * {@inheritDoc}

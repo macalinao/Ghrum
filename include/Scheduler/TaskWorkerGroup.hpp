@@ -13,30 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef _SCHEDULER_WORKER_GROUP_HPP_
-#define _SCHEDULER_WORKER_GROUP_HPP_
+#ifndef _TASK_WORKER_GROUP_HPP_
+#define _TASK_WORKER_GROUP_HPP_
 
-#include "SchedulerWorker.hpp"
-#include "TaskWrapper.hpp"
+#include "Task.hpp"
+#include "TaskWorker.hpp"
 
 namespace Ghrum {
 
 /**
- * Define a pool of {@see SchedulerWorker}.
+ * Define a pool of {@see TaskWorker}.
  *
  * @author Agustin Alvarez <wolftein@ghrum.org>
  */
-class SchedulerWorkerGroup {
+class TaskWorkerGroup {
 public:
     /**
      * Default constructor of the group.
      */
-    SchedulerWorkerGroup();
+    TaskWorkerGroup();
 
     /**
      * Destructor of the group.
      */
-    ~SchedulerWorkerGroup();
+    ~TaskWorkerGroup();
 
     /**
      * Start the worker group with a number of given
@@ -55,15 +55,15 @@ public:
     /**
      * Push work into the pool.
      *
-     * @handler the completation handler
+     * @param task the completation handler
      */
-    void push(TaskWrapper handler);
+    void push(std::shared_ptr<Task> task);
 private:
     boost::asio::io_service service_;
     std::unique_ptr<boost::asio::io_service::work> work_;
-    std::vector<std::unique_ptr<SchedulerWorker>> workers_;
+    std::vector<std::unique_ptr<TaskWorker>> workers_;
 };
 
 }; // namespace Ghrum
 
-#endif // _SCHEDULER_WORKER_GROUP_HPP_
+#endif // _TASK_WORKER_GROUP_HPP_

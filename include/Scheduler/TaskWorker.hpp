@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef _SCHEDULER_WORKER_HPP_
-#define _SCHEDULER_WORKER_HPP_
+#ifndef _TASK_WORKER_HPP_
+#define _TASK_WORKER_HPP_
 
 #include <Utilities/Delegate.hpp>
 #include <boost/asio.hpp>
@@ -27,19 +27,19 @@ namespace Ghrum {
  *
  * @author Agustin Alvarez <wolftein@ghrum.org>
  */
-class SchedulerWorker {
+class TaskWorker {
 public:
     /**
      * Default constructor of the worker.
      *
      * @param service the service
      */
-    SchedulerWorker(boost::asio::io_service * service);
+    TaskWorker(boost::asio::io_service * service);
 
     /**
      * Destructor of the worker.
      */
-    ~SchedulerWorker();
+    ~TaskWorker();
 
     /**
      * Returns if the worker is available.
@@ -52,15 +52,15 @@ public:
     void setCancelled();
 
     /**
+     * Join the worker until the worker ends its last task.
+     */
+    void join();
+private:
+    /**
      * Called to handle the run completation handler of
      * a worker.
      */
     void run();
-
-    /**
-     * Join the worker until the worker ends its last task.
-     */
-    void join();
 private:
     std::unique_ptr<boost::thread> thread_;
     boost::asio::io_service * service_;
@@ -69,4 +69,4 @@ private:
 
 }; // namespace Ghrum
 
-#endif // _SCHEDULER_WORKER_HPP_
+#endif // _TASK_WORKER_HPP_

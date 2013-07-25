@@ -37,15 +37,14 @@ void run(std::string & mode) {
     Ghrum::GhrumAPI::getInstance().setInstance(engine.get());
 
     // Initialize every engine's component.
-    BOOST_LOG_TRIVIAL(info) << "Initializing engine....";
+    BOOST_LOG_TRIVIAL(info) << "[*] Initializing....";
     engine->initialize();
 
     // Run into the scheduler's main loop.
-    BOOST_LOG_TRIVIAL(info) << "Executing stcheduler main loop.";
-    static_cast<Ghrum::Scheduler &>(engine->getScheduler()).execute();
+    static_cast<Ghrum::Scheduler &>(engine->getScheduler()).runMainThread();
 
     // Dispose every engine's component allocated.
-    BOOST_LOG_TRIVIAL(info) << "Exiting engine....";
+    BOOST_LOG_TRIVIAL(info) << "[*] Exiting....";
     engine->dispose();
 }
 
