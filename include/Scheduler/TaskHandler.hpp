@@ -13,26 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef _SCHEDULER_TASK_HANDLER_HPP_
-#define _SCHEDULER_TASK_HANDLER_HPP_
+#ifndef _TASK_HANDLER_HPP_
+#define _TASK_HANDLER_HPP_
 
-#include <Scheduler/Task.hpp>
+#include "Task.hpp"
 
 namespace Ghrum {
 
 /**
- * Implementation of {@see IScheduler}.
+ * Encapsulate a wrapper handler for any parallel task.
  *
  * @author Agustin Alvarez <wolftein@ghrum.org>
  */
-class SchedulerTaskHandler {
+class TaskHandler {
 public:
     /**
      * Default constructor of the wrapper handler.
      *
      * @param task a shared pointer to the task handler
      */
-    SchedulerTaskHandler(std::shared_ptr<Task> task)
+    TaskHandler(std::shared_ptr<Task> task)
         : task_(task) {
     }
 
@@ -40,7 +40,7 @@ public:
      * Define the call operator.
      */
     inline void operator()() {
-        task_->getFunction()();
+        static_cast<Task>(*task_)();
     }
 private:
     std::shared_ptr<Task> task_;
@@ -48,4 +48,4 @@ private:
 
 }; // namespace Ghrum
 
-#endif // _SCHEDULER_TASK_HANDLER_HPP_
+#endif // _TASK_HANDLER_HPP_

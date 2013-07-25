@@ -60,24 +60,24 @@ private:
     /**
      * {@inheritDoc}
      */
-    void emitEventAsync(Event & event, Function function, size_t id);
+    void emitEventAsync(Event & event, EventDelegate function, size_t id);
 
     /**
      * {@inheritDoc}
      */
-    bool addDelegate(IPlugin & owner, IEventManager::Function & callback, EventPriority priority, size_t id);
+    bool addDelegate(IPlugin & owner, EventDelegate & callback, EventPriority priority, size_t id);
 
     /**
      * {@inheritDoc}
      */
-    bool removeDelegate(IPlugin & owner, IEventManager::Function & callback, EventPriority priority, size_t id);
+    bool removeDelegate(IPlugin & owner, EventDelegate & callback, EventPriority priority, size_t id);
 private:
     /**
      * A type definition of a tuple that the manager use.
      */
-    typedef std::tuple<IEventManager::Function, EventPriority, size_t> ListTuple;
+    typedef std::tuple<EventDelegate, EventPriority, size_t> ListTuple;
 protected:
-    boost::mutex accessMutexList_;
+    std::mutex mutex_;
     std::unordered_map<size_t, std::vector<ListTuple>> plugin_;
     std::unordered_map<size_t, std::unique_ptr<EventHandler>> handler_;
 };

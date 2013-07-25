@@ -16,9 +16,27 @@
 #ifndef _GHRUM_ENGINE_HPP_
 #define _GHRUM_ENGINE_HPP_
 
+#include "Plugin/PluginManager.hpp"
+#include "Event/EventManager.hpp"
+#include "Scheduler/Scheduler.hpp"
 #include <IEngine.hpp>
 
 namespace Ghrum {
+
+/**
+ * Current platform name of the engine.
+ */
+#define PLATFORM_NAME "Ghrum"
+
+/**
+ * Current version of the engine.
+ */
+#define PLATFORM_VERSION "0.001.0000"
+
+/**
+ * Author of the engine.
+ */
+#define PLATFORM_AUTHOR "Ghrum Inc"
 
 /**
  * Implementation of {@see IEngine}.
@@ -28,14 +46,48 @@ namespace Ghrum {
 class GhrumEngine : public IEngine {
 public:
     /**
-     * {@inheritDoc}
+     * Initialize the engine.
      */
     void initialize();
 
     /**
+     * Dispose the engine.
+     */
+    void dispose();
+
+    /**
      * {@inheritDoc}
      */
-    void stop();
+    std::string getName();
+
+    /**
+     * {@inheritDoc}
+     */
+    std::string getVersion();
+
+    /**
+     * {@inheritDoc}
+     */
+    std::string getAuthor();
+
+    /**
+     * {@inheritDoc}
+     */
+    IPluginManager & getPluginManager();
+
+    /**
+     * {@inheritDoc}
+     */
+    IEventManager & getEventManager();
+
+    /**
+     * {@inheritDoc}
+     */
+    IScheduler & getScheduler();
+protected:
+    std::unique_ptr<PluginManager> pluginManager_;
+    std::unique_ptr<EventManager> eventManager_;
+    std::unique_ptr<Scheduler> scheduler_;
 };
 
 } // namespace Ghrum

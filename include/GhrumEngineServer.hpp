@@ -35,7 +35,12 @@ public:
     /**
      * {@inheritDoc}
      */
-    void stop();
+    void dispose();
+
+    /**
+     * {@inheritDoc}
+     */
+    Platform getPlatform();
 };
 
 } // namespace Ghrum

@@ -17,74 +17,57 @@
 #include <Plugin/PluginAssembly.hpp>
 #include <Plugin/PluginException.hpp>
 #include <GhrumAPI.hpp>
-#include <boost/filesystem.hpp>
 
 using namespace Ghrum;
 
 /////////////////////////////////////////////////////////////////
 // {@see PluginAssembly::PluginAssembly} ////////////////////////
 /////////////////////////////////////////////////////////////////
-PluginAssembly::PluginAssembly(PluginDescriptor & descriptor)
-    : IPlugin(descriptor), handle_(nullptr) {
+PluginAssembly::PluginAssembly(std::string & folder, PluginDescriptor & descriptor)
+    : Plugin(folder, descriptor), handle_(nullptr) {
 }
 
 /////////////////////////////////////////////////////////////////
 // {@see PluginAssembly::~PluginAssembly} ///////////////////////
 /////////////////////////////////////////////////////////////////
 PluginAssembly::~PluginAssembly() {
-    handleOnUnload();
+    onUnload();
 }
 
 /////////////////////////////////////////////////////////////////
-// {@see PluginAssembly::handleOnDisable} ///////////////////////
+// {@see PluginAssembly::onDisable} /////////////////////////////
 /////////////////////////////////////////////////////////////////
-void PluginAssembly::handleOnDisable() {
-    if (fnDisable_ != nullptr) {
+void PluginAssembly::onDisable() {
+    if (fnDisable_ != nullptr)
         fnDisable_(*this);
-    }
     enabled_ = false;
 }
 
 /////////////////////////////////////////////////////////////////
-// {@see PluginAssembly::handleOnEnable} ////////////////////////
+// {@see PluginAssembly::onEnable} //////////////////////////////
 /////////////////////////////////////////////////////////////////
-void PluginAssembly::handleOnEnable() {
-    if (fnEnable_ != nullptr) {
+void PluginAssembly::onEnable() {
+    if (fnEnable_ != nullptr)
         fnEnable_(*this);
-    }
     enabled_ = true;
 }
 
 /////////////////////////////////////////////////////////////////
-// {@see PluginAssembly::handleOnLoad} //////////////////////////
+// {@see PluginAssembly::onLoad} ////////////////////////////////
 /////////////////////////////////////////////////////////////////
-void PluginAssembly::handleOnLoad() {
+void PluginAssembly::onLoad() {
     // Get the local file path, on each operative system, the extension
     // is quite different. (Windows = .dll, Unix = .so)
-#ifdef _WINDOWS_
-    std::string filename = "plugin.dll";
-#else
-    std::string filename = "plugin.so";
-#endif
-
-    // Copy the library file into a temp directory, to allow
-    // reload of the plugin for new code inserted.
-    boost::filesystem::path tmpFolder(getFolder() + ".lock");
-    boost::filesystem::path tmpFilename(tmpFolder / filename);
-    boost::filesystem::create_directories(tmpFolder);
-    boost::filesystem::copy_file(boost::filesystem::path(getFolder() + filename),
-                                 tmpFilename,
-                                 boost::filesystem::copy_option::overwrite_if_exists);
+    std::string filename = folder_ + LIBRARY_NAME;
 
     // Load the shared library.
 #ifdef _WINDOWS_
-    handle_ = ::LoadLibrary(tmpFilename.c_str());
+    handle_ = ::LoadLibrary(filename.c_str());
 #else
-    handle_ = dlopen(tmpFilename.c_str(), RTLD_LAZY);
+    handle_ = dlopen(filename.c_str(), RTLD_LAZY);
 #endif // _WINDOWS_
-
     if (handle_ == nullptr) {
-        throw PluginException("Cannot load library file.");
+        throw PluginException("The shared library cannot be loaded.");
     }
 
     // Gets all function from the library.
@@ -108,7 +91,7 @@ void PluginAssembly::handleOnLoad() {
         = (pfSingleton)dlsym(handle_, "_ZN5Ghrum16IEngineSingleton11getInstanceEv");
 #endif // _WINDOWS_
     if (fnEngine != nullptr) {
-        fnEngine().setInstance(GhrumAPI::getEngine());
+        fnEngine().setInstance(&GhrumAPI::getEngine());
     }
 
     // Call the first plugin function.
@@ -117,20 +100,21 @@ void PluginAssembly::handleOnLoad() {
 }
 
 /////////////////////////////////////////////////////////////////
-// {@see PluginAssembly::handleOnUnload} ////////////////////////
+// {@see PluginAssembly::onUnload} //////////////////////////////
 /////////////////////////////////////////////////////////////////
-void PluginAssembly::handleOnUnload() {
-    // Call the function to dispose the shared library
-    // from the process's memory.
+void PluginAssembly::onUnload() {
     if (handle_ != nullptr)
 #ifdef _WINDOWS_
         ::FreeLibrary(handle_);
 #else
         dlclose(handle_);
 #endif // _WINDOWS_
+    handle_ = nullptr;
+}
 
-    // Removes the temporally file created for the shared
-    // library.
-    boost::filesystem::remove_all(
-        boost::filesystem::path(getFolder() + ".lock"));
+/////////////////////////////////////////////////////////////////
+// {@see PluginAssembly::isReloadAllowed} ///////////////////////
+/////////////////////////////////////////////////////////////////
+bool PluginAssembly::isReloadAllowed() {
+    return false;
 }

@@ -16,16 +16,20 @@
 #ifndef _PLUGIN_ASSEMBLY_HPP_
 #define _PLUGIN_ASSEMBLY_HPP_
 
-#include <Plugin/IPlugin.hpp>
+#include <Plugin/Plugin.hpp>
 
 #ifdef _WINDOWS_
 /**/ #include <windows.h>
 /**/
 /**/ typedef HMODULE Module;
+/**/
+/**/ #define LIBRARY_NAME "plugin.dll"
 #else
 /**/ #include <dlfcn.h>
 /**/
 /**/ typedef void * Module;
+/**/
+/**/ #define LIBRARY_NAME "plugin.so"
 #endif // _WINDOWS_
 
 namespace Ghrum {
@@ -35,7 +39,7 @@ namespace Ghrum {
  *
  * @author Agustin Alvarez <wolftein@ghrum.org>
  */
-class PluginAssembly : public IPlugin {
+class PluginAssembly : public Plugin {
 private:
     /**
      * Definition for any plugin entry function.
@@ -47,32 +51,37 @@ public:
      *
      * @param descriptor the descriptor
      */
-    PluginAssembly(PluginDescriptor & descriptor);
+    PluginAssembly(std::string & folder, PluginDescriptor & descriptor);
 
     /**
-     * Destructor will dispose the library handler.
+     * Destructor of the assembly plugin.
      */
     ~PluginAssembly();
-public:
-    /**
-     * {@inheritDoc}
-     */
-    void handleOnLoad();
 
     /**
      * {@inheritDoc}
      */
-    void handleOnDisable();
+    void onLoad();
 
     /**
      * {@inheritDoc}
      */
-    void handleOnEnable();
+    void onDisable();
 
     /**
      * {@inheritDoc}
      */
-    void handleOnUnload();
+    void onEnable();
+
+    /**
+     * {@inheritDoc}
+     */
+    void onUnload();
+
+    /**
+     * {@inheritDoc}
+     */
+    bool isReloadAllowed();
 protected:
     Module handle_;
     Function fnLoad_, fnEnable_, fnDisable_;

@@ -20,6 +20,17 @@
 using namespace Ghrum;
 
 /////////////////////////////////////////////////////////////////
+// {@see EventHandler::isEmpty} /////////////////////////////////
+/////////////////////////////////////////////////////////////////
+bool EventHandler::isEmpty() {
+    for (int i = 0; i <= EventPriority::Monitor; i++) {
+        if (delegates_[i].size() > 0)
+            return true;
+    }
+    return false;
+}
+
+/////////////////////////////////////////////////////////////////
 // {@see EventHandler::callEvent} ///////////////////////////////
 /////////////////////////////////////////////////////////////////
 void EventHandler::callEvent(Event & event) {
@@ -31,8 +42,8 @@ void EventHandler::callEvent(Event & event) {
 /////////////////////////////////////////////////////////////////
 // {@see EventHandler::addDelegate} /////////////////////////////
 /////////////////////////////////////////////////////////////////
-bool EventHandler::addDelegate(IEventManager::Function function, EventPriority priority) {
-    std::vector<IEventManager::Function>::iterator it
+bool EventHandler::addDelegate(IEventManager::EventDelegate function, EventPriority priority) {
+    std::vector<IEventManager::EventDelegate>::iterator it
         = std::find(delegates_[priority].begin(), delegates_[priority].end(), function);
     if (it != delegates_[priority].end()) {
         return false;
@@ -44,23 +55,12 @@ bool EventHandler::addDelegate(IEventManager::Function function, EventPriority p
 /////////////////////////////////////////////////////////////////
 // {@see EventHandler::removeDelegate} //////////////////////////
 /////////////////////////////////////////////////////////////////
-bool EventHandler::removeDelegate(IEventManager::Function function, EventPriority priority) {
-    std::vector<IEventManager::Function>::iterator it
+bool EventHandler::removeDelegate(IEventManager::EventDelegate function, EventPriority priority) {
+    std::vector<IEventManager::EventDelegate>::iterator it
         = std::find(delegates_[priority].begin(), delegates_[priority].end(), function);
     if (it == delegates_[priority].end()) {
         return false;
     }
     delegates_[priority].erase(it);
     return true;
-}
-
-/////////////////////////////////////////////////////////////////
-// {@see EventHandler::isEmpty} /////////////////////////////////
-/////////////////////////////////////////////////////////////////
-bool EventHandler::isEmpty() {
-    for (int i = 0; i <= EventPriority::Monitor; i++) {
-        if (delegates_[i].size() > 0)
-            return true;
-    }
-    return false;
 }

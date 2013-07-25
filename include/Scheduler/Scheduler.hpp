@@ -16,11 +16,32 @@
 #ifndef _SCHEDULER_HPP_
 #define _SCHEDULER_HPP_
 
+#include "Task.hpp"
 #include "SchedulerWorkerGroup.hpp"
 #include <Scheduler/IScheduler.hpp>
 #include <boost/heap/priority_queue.hpp>
 
 namespace Ghrum {
+
+/**
+ * Define the thread core factor.
+ */
+#define SCHEDULER_THREAD_FACTOR 3
+
+/**
+ * Declare a second.
+ */
+#define SCHEDULER_TICK_SECOND 1000
+
+/**
+ * Define number of ticks per second.
+ */
+#define SCHEDULER_TICK_PER_SECOND 60
+
+/**
+ * Define the normal time that should consume per TICK_SECOND
+ */
+#define SCHEDULER_TIME SCHEDULER_TICK_SECOND / SCHEDULER_TICK_PER_SECOND
 
 /**
  * Implementation of {@see IScheduler}.
@@ -33,11 +54,36 @@ public:
      * Default constructor.
      */
     Scheduler();
-public:
+
+    /**
+     * Start the execution of the scheduler.
+     */
+    void execute();
+
     /**
      * {@inheritDoc}
      */
-    void execute();
+    bool isActive();
+
+    /**
+     * {@inheritDoc}
+     */
+    bool isOverloaded();
+
+    /**
+     * {@inheritDoc}
+     */
+    size_t getUptime();
+
+    /**
+     * {@inheritDoc}
+     */
+    size_t getThreadCount();
+
+    /**
+     * {@inheritDoc}
+     */
+    size_t getIterationPerSecond();
 
     /**
      * {@inheritDoc}
@@ -52,9 +98,11 @@ public:
     /**
      * {@inheritDoc}
      */
-    Task & addTask(IPlugin * owner, Task::Function callback, TaskPriority priority, uint32_t delay,
-                   uint32_t period, bool isParallel);
+    ITask & addTask(IPlugin * owner, Delegate<void()> callback, TaskPriority priority, uint32_t delay, uint32_t period,
+                    bool isParallel);
 protected:
+    bool active_, overloaded_;
+    size_t uptime_;
     SchedulerWorkerGroup workerGroup_;
     boost::heap::priority_queue<std::shared_ptr<Task>> tasks_;
 };

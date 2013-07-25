@@ -22,17 +22,23 @@ using namespace Ghrum;
 // {@see GhrumEngineServer::initialize} /////////////////////////
 /////////////////////////////////////////////////////////////////
 void GhrumEngineServer::initialize() {
-    platform_ = Platform::Server;
     // =================== Base Call ==============
     GhrumEngine::initialize();
     // =================== Base Call ==============
 }
 
 /////////////////////////////////////////////////////////////////
-// {@see GhrumEngineServer::stop} ///////////////////////////////
+// {@see GhrumEngineServer::dispose} ////////////////////////////
 /////////////////////////////////////////////////////////////////
-void GhrumEngineServer::stop() {
+void GhrumEngineServer::dispose() {
     // =================== Base Call ==============
-    GhrumEngine::stop();
+    GhrumEngine::dispose();
     // =================== Base Call ==============
+}
+
+/////////////////////////////////////////////////////////////////
+// {@see GhrumEngineServer::getPlatform} ////////////////////////
+/////////////////////////////////////////////////////////////////
+Platform GhrumEngineServer::getPlatform() {
+    return Platform::Server;
 }

@@ -28,6 +28,11 @@ namespace Ghrum {
 class EventHandler {
 public:
     /**
+     * Return if the handler is empty.
+     */
+    bool isEmpty();
+
+    /**
      * Emit an event into all delegates.
      *
      * @param event the event to push
@@ -41,7 +46,7 @@ public:
      * @param priority priority of the delegate
      * @return true if the delegate was added succesfull
      */
-    bool addDelegate(IEventManager::Function function, EventPriority priority);
+    bool addDelegate(IEventManager::EventDelegate function, EventPriority priority);
 
     /**
      * Removes a delegate from the handler.
@@ -50,14 +55,9 @@ public:
      * @param priority priority of the delegate
      * @return true if the delegate was removed succesfull
      */
-    bool removeDelegate(IEventManager::Function function, EventPriority priority);
-
-    /**
-     * Return if the handler is empty.
-     */
-    bool isEmpty();
+    bool removeDelegate(IEventManager::EventDelegate function, EventPriority priority);
 private:
-    std::vector<IEventManager::Function> delegates_[EventPriority::Monitor + 1];
+    std::vector<IEventManager::EventDelegate> delegates_[EventPriority::Monitor + 1];
 };
 
 }; // namespace Ghrum

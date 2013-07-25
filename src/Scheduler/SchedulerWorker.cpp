@@ -33,7 +33,20 @@ SchedulerWorker::SchedulerWorker(boost::asio::io_service * service)
 /////////////////////////////////////////////////////////////////
 SchedulerWorker::~SchedulerWorker() {
     setCancelled();
-    waitForWorker();
+}
+
+/////////////////////////////////////////////////////////////////
+// {@see SchedulerWorker::isAvailable} //////////////////////////
+/////////////////////////////////////////////////////////////////
+bool SchedulerWorker::isAvailable() {
+    return available_;
+}
+
+/////////////////////////////////////////////////////////////////
+// {@see SchedulerWorker::setCancelled} /////////////////////////
+/////////////////////////////////////////////////////////////////
+void SchedulerWorker::setCancelled() {
+    available_ = false;
 }
 
 /////////////////////////////////////////////////////////////////
@@ -55,13 +68,11 @@ void SchedulerWorker::run() {
                 uptime_ += std::chrono::duration_cast<std::chrono::milliseconds>(
                                std::chrono::steady_clock::now() - start).count();
             }
-
             // Check if there was an error.
             if (errorCode) {
                 BOOST_LOG_TRIVIAL(error)
                         << "Worker has trigger an exception: " << errorCode.message();
             }
-
             // Check for interrupt handler.
             boost::this_thread::interruption_point();
         } catch (std::exception & ex) {
@@ -71,4 +82,20 @@ void SchedulerWorker::run() {
             available_ = false;
         }
     }
+    // After this point, then scheduler worker will be disposed
+    // and the thread will be removed from the platform.
+}
+
+/////////////////////////////////////////////////////////////////
+// {@see SchedulerWorker::join} /////////////////////////////////
+/////////////////////////////////////////////////////////////////
+void SchedulerWorker::join() {
+    thread_->join();
+}
+
+/////////////////////////////////////////////////////////////////
+// {@see SchedulerWorker::getUptime} ////////////////////////////
+/////////////////////////////////////////////////////////////////
+size_t SchedulerWorker::getUptime() {
+    return uptime_;
 }

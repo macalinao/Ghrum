@@ -36,12 +36,17 @@ void run(std::string & mode) {
     }
     Ghrum::GhrumAPI::getInstance().setInstance(engine.get());
 
-    // First initialize the engine, after execute the scheduler
-    // until the platform is shutting down and finally cleanup
-    // the entire enviroment.
+    // Initialize every engine's component.
+    BOOST_LOG_TRIVIAL(info) << "Initializing engine....";
     engine->initialize();
-    engine->getScheduler().execute();
-    engine->stop();
+
+    // Run into the scheduler's main loop.
+    BOOST_LOG_TRIVIAL(info) << "Executing stdcheduler main loop.";
+    static_cast<Ghrum::Scheduler &>(engine->getScheduler()).execute();
+
+    // Dispose every engine's component allocated.
+    BOOST_LOG_TRIVIAL(info) << "Exiting engine....";
+    engine->dispose();
 }
 
 /**

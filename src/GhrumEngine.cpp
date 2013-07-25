@@ -18,7 +18,7 @@
 #include <Scheduler/Scheduler.hpp>
 #include <Plugin/PluginManager.hpp>
 #include <Event/EventManager.hpp>
- 
+
 using namespace Ghrum;
 
 /////////////////////////////////////////////////////////////////
@@ -26,27 +26,76 @@ using namespace Ghrum;
 /////////////////////////////////////////////////////////////////
 void GhrumEngine::initialize() {
     // Build the instance of the engine.
-    pluginManager_ = std::unique_ptr<IPluginManager>(new PluginManager());
-    eventManager_  = std::unique_ptr<IEventManager>(new EventManager());
-    scheduler_     = std::unique_ptr<IScheduler>(new Scheduler());
+    pluginManager_ = std::unique_ptr<PluginManager>(new PluginManager());
+    eventManager_  = std::unique_ptr<EventManager>(new EventManager());
+    scheduler_     = std::unique_ptr<Scheduler>(new Scheduler());
 
     // Find every plugin available for the current
-    // platform mode, and then enable those that are
-    // generated before the world.
-    pluginManager_->findAvailable();
+    // platform mode.
+    BOOST_LOG_TRIVIAL(info) << "Searching for plugins.";
+    pluginManager_->findAndLoad();
+
+    // Enabled those plugin that are marked to initialize before
+    // the world generation, this plugins are named as core plugins.
+    BOOST_LOG_TRIVIAL(info) << "Enabling OnInitialize plugins.";
     pluginManager_->enableAll(PluginOrder::OnInitialize);
 
-    // Generate and load the current world, and enable those
-    // plugin that are marked after the world.
+    // Generate and load the current world.
     // <TODO: World Generation>
+
+    // Enable those plugins that are marked to initialize after
+    // the world generation.
+    BOOST_LOG_TRIVIAL(info) << "Enabling OnWorld plugins.";
     pluginManager_->enableAll(PluginOrder::OnWorld);
 }
 
 /////////////////////////////////////////////////////////////////
-// {@see GhrumEngine::stop} /////////////////////////////////////
+// {@see GhrumEngine::dispose} //////////////////////////////////
 /////////////////////////////////////////////////////////////////
-void GhrumEngine::stop() {
+void GhrumEngine::dispose() {
     // Unload every plugin loaded by the platform, and each
     // event and task allocated by them.
     pluginManager_->unloadAll();
+}
+
+/////////////////////////////////////////////////////////////////
+// {@see GhrumEngine::getName} //////////////////////////////////
+/////////////////////////////////////////////////////////////////
+std::string GhrumEngine::getName() {
+    return PLATFORM_NAME;
+}
+
+/////////////////////////////////////////////////////////////////
+// {@see GhrumEngine::getVersion} ///////////////////////////////
+/////////////////////////////////////////////////////////////////
+std::string GhrumEngine::getVersion() {
+    return PLATFORM_VERSION;
+}
+
+/////////////////////////////////////////////////////////////////
+// {@see GhrumEngine::getAuthor} ////////////////////////////////
+/////////////////////////////////////////////////////////////////
+std::string GhrumEngine::getAuthor() {
+    return PLATFORM_AUTHOR;
+}
+
+/////////////////////////////////////////////////////////////////
+// {@see GhrumEngine::getPluginManager} /////////////////////////
+/////////////////////////////////////////////////////////////////
+IPluginManager & GhrumEngine::getPluginManager() {
+    return *pluginManager_;
+}
+
+/////////////////////////////////////////////////////////////////
+// {@see GhrumEngine::getEventManager} //////////////////////////
+/////////////////////////////////////////////////////////////////
+IEventManager & GhrumEngine::getEventManager() {
+    return *eventManager_;
+}
+
+/////////////////////////////////////////////////////////////////
+// {@see GhrumEngine::getScheduler} /////////////////////////////
+/////////////////////////////////////////////////////////////////
+IScheduler & GhrumEngine::getScheduler() {
+    return *scheduler_;
 }

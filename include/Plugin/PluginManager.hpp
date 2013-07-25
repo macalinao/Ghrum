@@ -16,6 +16,7 @@
 #ifndef _PLUGIN_MANAGER_HPP_
 #define _PLUGIN_MANAGER_HPP_
 
+#include "Plugin.hpp"
 #include <Plugin/IPluginManager.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/property_tree/detail/xml_parser_error.hpp>
@@ -30,13 +31,24 @@ namespace Ghrum {
 class PluginManager : public IPluginManager {
 public:
     /**
+     * Default constructor of the plugin manager.
+     */
+    PluginManager();
+
+    /**
      * Parse the plugin descriptor, given the property file.
      *
      * @param tree the tree to parse from.
      * @param descriptor the descriptor to populate.
      */
     void getFileDescriptor(boost::property_tree::ptree & tree, PluginDescriptor & descriptor);
-public:
+
+    /**
+     * Find and load every plugin available in the
+     * plugin folder.
+     */
+    size_t findAndLoad();
+
     /**
      * {@inheritDoc}
      */
@@ -95,15 +107,11 @@ public:
     /**
      * {@inheritDoc}
      */
-    std::vector<IPlugin *> getPlugins();
-
-    /**
-     * {@inheritDoc}
-     */
-    size_t findAvailable();
+    std::vector<IPlugin const *> getPlugins();
 protected:
-    boost::mutex accessMutexList_;
-    std::unordered_map<std::string, std::unique_ptr<IPlugin>> plugins_;
+    std::mutex mutex_;
+    std::string folder_;
+    std::unordered_map<std::string, std::unique_ptr<Plugin>> plugins_;
 };
 
 }; // namespace Ghrum

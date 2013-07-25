@@ -42,7 +42,7 @@ void EventManager::emitEventAsync(Event & event, size_t id) {
 /////////////////////////////////////////////////////////////////
 // {@see EventManager::emitEventAsync} //////////////////////////
 /////////////////////////////////////////////////////////////////
-void EventManager::emitEventAsync(Event & event, Function function, size_t id) {
+void EventManager::emitEventAsync(Event & event, EventDelegate function, size_t id) {
     auto delegate(Delegate<void ()>([&]() {
         emitEvent(event, id);
         function(event);
@@ -55,7 +55,7 @@ void EventManager::emitEventAsync(Event & event, Function function, size_t id) {
 /////////////////////////////////////////////////////////////////
 void EventManager::remove(IPlugin & owner) {
     // =================== Lock ===================
-    boost::mutex::scoped_lock lock(accessMutexList_);
+    std::lock_guard<std::mutex> lock(mutex_);
     // =================== Lock ===================
 
     if (plugin_.count(owner.getId()) == 0) {
@@ -77,7 +77,7 @@ void EventManager::remove(IPlugin & owner) {
 /////////////////////////////////////////////////////////////////
 void EventManager::removeAll() {
     // =================== Lock ===================
-    boost::mutex::scoped_lock lock(accessMutexList_);
+    std::lock_guard<std::mutex> lock(mutex_);
     // =================== Lock ===================
 
     plugin_.clear();
@@ -111,10 +111,9 @@ bool EventManager::removeListener(IPlugin & owner, EventListener & listener) {
 /////////////////////////////////////////////////////////////////
 // {@see EventManager::addDelegate} /////////////////////////////
 /////////////////////////////////////////////////////////////////
-bool EventManager::addDelegate(IPlugin & owner, IEventManager::Function & callback,
-                               EventPriority priority, size_t id) {
+bool EventManager::addDelegate(IPlugin & owner, EventDelegate & callback, EventPriority priority, size_t id) {
     // =================== Lock ===================
-    boost::mutex::scoped_lock lock(accessMutexList_);
+    std::lock_guard<std::mutex> lock(mutex_);
     // =================== Lock ===================
 
     std::unique_ptr<EventHandler> & handler = handler_[id];
@@ -131,10 +130,9 @@ bool EventManager::addDelegate(IPlugin & owner, IEventManager::Function & callba
 /////////////////////////////////////////////////////////////////
 // {@see EventManager::removeDelegate} //////////////////////////
 /////////////////////////////////////////////////////////////////
-bool EventManager::removeDelegate(IPlugin & owner, IEventManager::Function & callback,
-                                  EventPriority priority, size_t id) {
+bool EventManager::removeDelegate(IPlugin & owner, EventDelegate & callback, EventPriority priority, size_t id) {
     // =================== Lock ===================
-    boost::mutex::scoped_lock lock(accessMutexList_);
+    std::lock_guard<std::mutex> lock(mutex_);
     // =================== Lock ===================
 
     std::unordered_map<size_t, std::unique_ptr<EventHandler>>::iterator it

@@ -17,7 +17,7 @@
 #define _SCHEDULER_WORKER_GROUP_HPP_
 
 #include "SchedulerWorker.hpp"
-#include "SchedulerTaskHandler.hpp"
+#include "TaskHandler.hpp"
 
 namespace Ghrum {
 
@@ -45,13 +45,13 @@ public:
      * completation work.
      */
     void joinAll();
-public:
+
     /**
      * Push work into the pool.
      *
      * @handler the completation handler
      */
-    inline void push(SchedulerTaskHandler handler) {
+    inline void push(TaskHandler handler) {
         service_.post(handler);
     }
 private:

@@ -27,13 +27,9 @@ SchedulerWorkerGroup::SchedulerWorkerGroup(size_t threadSize)
         new boost::asio::io_service::work(service_)) {
     // Create all the workers and bind it to
     // a dedicate thread.
-    for (size_t i = 0; i < threadSize; i++) {
-        workers_.push_back(
-            std::unique_ptr<SchedulerWorker>(
-                new SchedulerWorker(&service_)));
-    }
-    BOOST_LOG_TRIVIAL(info)
-            << "SchedulerWorkerGroup started with " << threadSize << " workers.";
+    for (size_t i = 0; i < threadSize; i++)
+        workers_.push_back(std::unique_ptr<SchedulerWorker>(
+                               new SchedulerWorker(&service_)));
 }
 
 /////////////////////////////////////////////////////////////////
@@ -51,7 +47,7 @@ void SchedulerWorkerGroup::joinAll() {
         workers_[i]->setCancelled();
     }
     for (size_t i = 0; i < workers_.size(); i++) {
-        workers_[i]->waitForWorker();
+        workers_[i]->join();
     }
     work_.reset();
     service_.run();

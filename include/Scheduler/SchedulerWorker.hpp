@@ -16,7 +16,8 @@
 #ifndef _SCHEDULER_WORKER_HPP_
 #define _SCHEDULER_WORKER_HPP_
 
-#include <Event/Delegate.hpp>
+#include <Scheduler/ISchedulerWorker.hpp>
+#include <Utilities/Delegate.hpp>
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
 
@@ -27,12 +28,7 @@ namespace Ghrum {
  *
  * @author Agustin Alvarez <wolftein@ghrum.org>
  */
-class SchedulerWorker {
-private:
-    /**
-     * Define the callback of the worker.
-     */
-    typedef Delegate<void ()> Callback;
+class SchedulerWorker : public ISchedulerWorker {
 public:
     /**
      * Default constructor of the worker.
@@ -47,38 +43,30 @@ public:
     ~SchedulerWorker();
 
     /**
+     * Returns if the worker is available.
+     */
+    bool isAvailable();
+
+    /**
+     * Set the worker to be disposed.
+     */
+    void setCancelled();
+
+    /**
      * Called to handle the run completation handler of
      * a worker.
      */
     void run();
-public:
-    /**
-     * Waits for the worker to be cancelled.
-     */
-    inline void waitForWorker() {
-        thread_->join();
-    }
 
     /**
-     * Cancel the worker.
+     * Join the worker until the worker ends its last task.
      */
-    inline void setCancelled() {
-        available_ = false;
-    }
+    void join();
 
     /**
-     * Return if the worker is available.
+     * {@inheritDoc}
      */
-    inline bool isAvailable() {
-        return available_;
-    }
-
-    /**
-     * Return how much time the worker has been active.
-     */
-    inline size_t getUptime() {
-        return uptime_;
-    }
+    size_t getUptime();
 private:
     std::unique_ptr<boost::thread> thread_;
     boost::asio::io_service * service_;

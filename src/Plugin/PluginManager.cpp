@@ -22,6 +22,13 @@
 using namespace Ghrum;
 
 /////////////////////////////////////////////////////////////////
+// {@see PluginManager::PluginManager} //////////////////////////
+/////////////////////////////////////////////////////////////////
+PluginManager::PluginManager()
+    : folder_(PLUGIN_FOLDER) {
+}
+
+/////////////////////////////////////////////////////////////////
 // {@see PluginManager::getFileDescriptor} //////////////////////
 /////////////////////////////////////////////////////////////////
 void PluginManager::getFileDescriptor(boost::property_tree::ptree & tree,  PluginDescriptor & descriptor) {
@@ -47,6 +54,43 @@ void PluginManager::getFileDescriptor(boost::property_tree::ptree & tree,  Plugi
 }
 
 /////////////////////////////////////////////////////////////////
+// {@see PluginManager::findAndLoad} ////////////////////////////
+/////////////////////////////////////////////////////////////////
+size_t PluginManager::findAndLoad() {
+    size_t index = 0;
+    // Convert std::string to boost::path and create
+    // the folder if doesn't exist.
+    boost::filesystem::path folder(folder_);
+    if (!boost::filesystem::exists(folder)) {
+        boost::filesystem::create_directory(folder);
+    }
+
+    // Iterate over each directory and file inside plugin's folder.
+    for (boost::filesystem::directory_iterator dir(folder), end;
+            dir != end; dir++) {
+        // Get the path to the target location.
+        boost::filesystem::path entry(*dir);
+
+        // Files and folder not valid.
+        if (!boost::filesystem::is_directory(entry)
+                || !boost::filesystem::exists(entry / PLUGIN_DESCRIPTOR_FILENAME)) {
+            continue;
+        }
+
+        // Load the plugin.
+        std::string name = entry.leaf().string();
+        BOOST_LOG_TRIVIAL(info) << "Found plugin with name: " << name;
+
+        // Try to load the plugin from the file.
+        if (!load(name))
+            BOOST_LOG_TRIVIAL(error) << "Trying to load the plugin: " << name;
+        else
+            index++;
+    }
+    return index;
+}
+
+/////////////////////////////////////////////////////////////////
 // {@see PluginManager::exist} //////////////////////////////////
 /////////////////////////////////////////////////////////////////
 bool PluginManager::exist(const std::string & name) {
@@ -57,13 +101,15 @@ bool PluginManager::exist(const std::string & name) {
 // {@see PluginManager::load} ///////////////////////////////////
 /////////////////////////////////////////////////////////////////
 bool PluginManager::load(const std::string & name) {
+    // Don't try to load a plugin that is already
+    // loaded on memory.
     if (plugins_.count(name) > 0) {
         return true;
     }
 
     // Gets the folder of the plugin, the folder
     // contains every related to the plugin.
-    std::string folder(PLUGIN_FOLDER + name + PATH_SEPARATOR);
+    std::string folder(folder_ + name + PATH_SEPARATOR);
 
     // Loads the descriptor from the file and populate it
     // with important information regarding the plugin.
@@ -97,30 +143,30 @@ bool PluginManager::load(const std::string & name) {
     }
 
     // Create the given type of plugin and mark it for loading.
-    std::unique_ptr<IPlugin> plugin = nullptr;
+    std::unique_ptr<Plugin> plugin = nullptr;
     try {
         if (descriptor.Type == PluginType::Assembly) {
-            plugin = std::unique_ptr<IPlugin>(
-                         new PluginAssembly(descriptor));
-        } else if (descriptor.Type == PluginType::Lua) {
+            plugin = std::unique_ptr<Plugin>(
+                         new PluginAssembly(folder, descriptor));
+        } else if (descriptor.Type == PluginType::Javascript) {
             BOOST_LOG_TRIVIAL(error)
-                    << "Lua is not supported yet.";
+                    << "Javascript is not supported yet.";
             return false;
-            // < ==================> TODO: LUA Plugin <========================== >
-            // < ==================> TODO: LUA Plugin <========================== >
-            // < ==================> TODO: LUA Plugin <========================== >
+            // < ==================> TODO: Javascript Plugin <========================== >
+            // < ==================> TODO: Javascript Plugin <========================== >
+            // < ==================> TODO: Javascript Plugin <========================== >
         }
-        plugin->handleOnLoad();
+        plugin->onLoad();
     } catch (PluginException & ex) {
         BOOST_LOG_TRIVIAL(error) << ex.what();
         return false;
     }
 
     // =================== Lock ===================
-    boost::mutex::scoped_lock lock(accessMutexList_);
+    std::lock_guard<std::mutex> lock(mutex_);
     // =================== Lock ===================
     plugins_.insert(
-        std::pair<std::string, std::unique_ptr<IPlugin>>(name, std::move(plugin)));
+        std::pair<std::string, std::unique_ptr<Plugin>>(name, std::move(plugin)));
     return true;
 }
 
@@ -129,10 +175,10 @@ bool PluginManager::load(const std::string & name) {
 /////////////////////////////////////////////////////////////////
 void PluginManager::enableAll(PluginOrder order) {
     for (auto & plugin : plugins_) {
-        const std::unique_ptr<IPlugin> & refPlugin = plugin.second;
+        const std::unique_ptr<Plugin> & refPlugin = plugin.second;
 
         if (!refPlugin->isEnabled() && refPlugin->getDescriptor().Order == order)
-            refPlugin->handleOnEnable();
+            refPlugin->onEnable();
     }
     // After this point every valid plugin loaded with the given
     // order will be enabled.
@@ -143,7 +189,7 @@ void PluginManager::enableAll(PluginOrder order) {
 /////////////////////////////////////////////////////////////////
 void PluginManager::unload(IPlugin & plugin) {
     // =================== Lock ===================
-    boost::mutex::scoped_lock lock(accessMutexList_);
+    std::lock_guard<std::mutex> lock(mutex_);
     // =================== Lock ===================
 
     GhrumAPI::getScheduler().cancel(plugin);
@@ -156,7 +202,7 @@ void PluginManager::unload(IPlugin & plugin) {
 /////////////////////////////////////////////////////////////////
 void PluginManager::unloadAll() {
     // =================== Lock ===================
-    boost::mutex::scoped_lock lock(accessMutexList_);
+    std::lock_guard<std::mutex> lock(mutex_);
     // =================== Lock ===================
 
     for (auto & plugin : plugins_) {
@@ -171,20 +217,18 @@ void PluginManager::unloadAll() {
 // {@see PluginManager::enable} /////////////////////////////////
 /////////////////////////////////////////////////////////////////
 void PluginManager::enable(IPlugin & plugin) {
-    if (plugin.isEnabled()) {
+    if (plugin.isEnabled())
         return;
-    }
-    plugin.handleOnEnable();
+    static_cast<Plugin &>(plugin).onEnable();
 }
 
 /////////////////////////////////////////////////////////////////
 // {@see PluginManager::disable} ////////////////////////////////
 /////////////////////////////////////////////////////////////////
 void PluginManager::disable(IPlugin & plugin) {
-    if (!plugin.isEnabled()) {
+    if (!plugin.isEnabled())
         return;
-    }
-    plugin.handleOnDisable();
+    static_cast<Plugin &>(plugin).onDisable();
 }
 
 /////////////////////////////////////////////////////////////////
@@ -192,8 +236,8 @@ void PluginManager::disable(IPlugin & plugin) {
 /////////////////////////////////////////////////////////////////
 void PluginManager::disableAll() {
     for (auto & plugin : plugins_)
-        if ( !plugin.second->isEnabled() )
-            plugin.second->handleOnDisable();
+        if (!plugin.second->isEnabled())
+            plugin.second->onDisable();
 }
 
 /////////////////////////////////////////////////////////////////
@@ -201,20 +245,26 @@ void PluginManager::disableAll() {
 /////////////////////////////////////////////////////////////////
 void PluginManager::reload(IPlugin & plugin) {
     // =================== Lock ===================
-    boost::mutex::scoped_lock lock(accessMutexList_);
+    std::lock_guard<std::mutex> lock(mutex_);
     // =================== Lock ===================
+
+    // Check if the plugin can be reloaded.
+    Plugin & refPlugin = static_cast<Plugin &>(plugin);
+    if (!refPlugin.isReloadAllowed()) {
+        return;
+    }
 
     // Unload the plugin memory and all objects
     // registered in the platform.
     GhrumAPI::getScheduler().cancel(plugin);
     GhrumAPI::getEventManager().remove(plugin);
-    plugin.handleOnUnload();
+    refPlugin.onUnload();
 
     // Now load the plugin again into the memory.
     bool isLoaded = false;
     try {
         // Call to handle the plugin onLoad again.
-        plugin.handleOnLoad();
+        refPlugin.onLoad();
 
         // Set the plugin to be loaded back.
         isLoaded = true;
@@ -228,7 +278,7 @@ void PluginManager::reload(IPlugin & plugin) {
     if (!isLoaded)
         plugins_.erase(plugin.getName());
     else
-        plugin.handleOnEnable();
+        refPlugin.onEnable();
 }
 
 /////////////////////////////////////////////////////////////////
@@ -243,7 +293,7 @@ void PluginManager::reloadAll() {
 // {@see PluginManager::getPlugin} //////////////////////////////
 /////////////////////////////////////////////////////////////////
 IPlugin & PluginManager::getPlugin(const std::string & name) {
-    std::unordered_map<std::string, std::unique_ptr<IPlugin>>::iterator it
+    std::unordered_map<std::string, std::unique_ptr<Plugin>>::iterator it
             = plugins_.find(name);
     if (it == plugins_.end()) {
         throw new PluginException("Can't query the plugin given.");
@@ -254,47 +304,10 @@ IPlugin & PluginManager::getPlugin(const std::string & name) {
 /////////////////////////////////////////////////////////////////
 // {@see PluginManager::getPlugins} /////////////////////////////
 /////////////////////////////////////////////////////////////////
-std::vector<IPlugin *> PluginManager::getPlugins() {
-    std::vector<IPlugin *> list;
+std::vector<IPlugin const *> PluginManager::getPlugins() {
+    std::vector<IPlugin const *> list;
     for (auto & it : plugins_) {
         list.push_back( it.second.get() );
     }
     return list;
-}
-
-/////////////////////////////////////////////////////////////////
-// {@see PluginManager::findAvailable} //////////////////////////
-/////////////////////////////////////////////////////////////////
-size_t PluginManager::findAvailable() {
-    size_t index = 0;
-    // Convert std::string to boost::path and create
-    // the folder if doesn't exist.
-    boost::filesystem::path folder(PLUGIN_FOLDER);
-    if (!boost::filesystem::exists(folder)) {
-        boost::filesystem::create_directory(folder);
-    }
-
-    // Iterate over each directory and file inside plugin's folder.
-    for (boost::filesystem::directory_iterator dir(folder), end;
-            dir != end; dir++) {
-        // Get the path to the target location.
-        boost::filesystem::path entry(*dir);
-
-        // Files and folder not valid.
-        if (!boost::filesystem::is_directory(entry)
-                || !boost::filesystem::exists(entry / PLUGIN_DESCRIPTOR_FILENAME)) {
-            continue;
-        }
-
-        // Load the plugin.
-        std::string name = entry.leaf().string();
-        BOOST_LOG_TRIVIAL(info) << "Found plugin with name: " << name;
-
-        // Try to load the plugin from the file.
-        if (!load(name))
-            BOOST_LOG_TRIVIAL(error) << "Trying to load the plugin: " << name;
-        else
-            index++;
-    }
-    return index;
 }
