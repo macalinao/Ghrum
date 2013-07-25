@@ -30,6 +30,9 @@ namespace Ghrum {
  */
 class Scheduler : public IScheduler {
 private:
+    /**
+     * Structure to compare both shared_ptr<Task>.
+     */
     struct Comparator {
         bool operator() (std::shared_ptr<Task> rhs, std::shared_ptr<Task> lhs) const {
             return *lhs < *rhs;
@@ -101,15 +104,6 @@ public:
      */
     ITask & asyncAnonymousTask(Delegate<void()> callback, TaskPriority priority);
 private:
-    /**
-     * Compare both task for their priority.
-     *
-     * @param rhs
-     * @param lhs
-     * @return lhs > rhs.
-     */
-    bool compareTaskPriority(std::shared_ptr<Task> rhs, std::shared_ptr<Task> lhs) const;
-
     /**
      * Run every parallel task available.
      *
