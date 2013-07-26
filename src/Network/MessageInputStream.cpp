@@ -46,7 +46,7 @@ int8_t MessageInputStream::readByte() {
 /////////////////////////////////////////////////////////////////
 size_t MessageInputStream::readBytes(int8_t * buffer, size_t length) {
     if (buffer_.size() < length) {
-        return buffer_.size();
+        length = buffer_.size();
     }
     for (size_t i = 0; i < length; i++) {
         buffer[i] = readByte();
