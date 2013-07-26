@@ -60,7 +60,7 @@ void TaskWorkerGroup::joinAll() {
 // {@see TaskWorkerGroup::push} ////////////////////////////////
 /////////////////////////////////////////////////////////////////
 void TaskWorkerGroup::push(std::shared_ptr<Task> task) {
-    service_.post([task] {
+    service_.post([=] {
         static_cast<Task &>(*task)();
     });
 }

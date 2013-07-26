@@ -55,12 +55,12 @@ private:
     /**
      * {@inheritDoc}
      */
-    void emitEventAsync(Event & event, size_t id);
+    void emitEventAsync(std::shared_ptr<Event> event, size_t id);
 
     /**
      * {@inheritDoc}
      */
-    void emitEventAsync(Event & event, EventDelegate function, size_t id);
+    void emitEventAsync(std::shared_ptr<Event> event, EventDelegate function, size_t id);
 
     /**
      * {@inheritDoc}

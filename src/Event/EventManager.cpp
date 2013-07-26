@@ -32,21 +32,21 @@ void EventManager::emitEvent(Event & event, size_t id) {
 /////////////////////////////////////////////////////////////////
 // {@see EventManager::emitEventAsync} //////////////////////////
 /////////////////////////////////////////////////////////////////
-void EventManager::emitEventAsync(Event & event, size_t id) {
-    auto delegate(Delegate<void ()>([&]() {
-        emitEvent(event, id);
-    }));
+void EventManager::emitEventAsync(std::shared_ptr<Event> event, size_t id) {
+    Delegate<void ()> delegate([=]() mutable {
+        emitEvent(*event, id);
+    });
     GhrumAPI::getScheduler().asyncAnonymousTask(delegate);
 }
 
 /////////////////////////////////////////////////////////////////
 // {@see EventManager::emitEventAsync} //////////////////////////
 /////////////////////////////////////////////////////////////////
-void EventManager::emitEventAsync(Event & event, EventDelegate function, size_t id) {
-    auto delegate(Delegate<void ()>([&]() {
-        emitEvent(event, id);
-        function(event);
-    }));
+void EventManager::emitEventAsync(std::shared_ptr<Event> event, EventDelegate function, size_t id) {
+    Delegate<void ()> delegate([=]() mutable {
+        emitEvent(*event, id);
+        function(*event);
+    });
     GhrumAPI::getScheduler().asyncAnonymousTask(delegate);
 }
 
