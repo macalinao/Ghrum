@@ -38,6 +38,12 @@ FILE(GLOB_RECURSE SOURCES
    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
 )
 
+# Set OS dependencies.
+IF (WIN32)
+	ADD_DEFINITIONS( -D_WIN32_WINNT=0x0501 )
+ENDIF()
+
+# Add executables.
 ADD_EXECUTABLE(Ghrum ${SOURCES})
 
 # Set the target libraries.
