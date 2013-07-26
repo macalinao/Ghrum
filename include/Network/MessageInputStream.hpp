@@ -17,8 +17,117 @@
 #define _MESSAGE_INPUT_STREAM_HPP_
 
 #include <Network/IMessageInputStream.hpp>
+#include <deque>
 
 namespace Ghrum {
+
+/**
+ * Implementation of {@see MessageInputStream}.
+ *
+ * @author Agustin Alvarez <wolftein@ghrum.org>
+ */
+class MessageInputStream : public IMessageInputStream {
+public:
+    /**
+     * Default constructor of a input stream.
+     *
+     * @param buffer where the data is at.
+     */
+    MessageInputStream(std::deque<int8_t> & buffer);
+
+    /**
+     * {@inheritDoc}
+     */
+    bool readBoolean();
+
+    /**
+     * {@inheritDoc}
+     */
+    int8_t readByte();
+
+    /**
+     * {@inheritDoc}
+     */
+    size_t readBytes(int8_t * buffer, size_t length);
+
+    /**
+     * {@inheritDoc}
+     */
+    uint8_t readUnsignedByte();
+
+    /**
+     * {@inheritDoc}
+     */
+    int16_t readShort();
+
+    /**
+     * {@inheritDoc}
+     */
+    uint16_t readUnsignedShort();
+
+    /**
+     * {@inheritDoc}
+     */
+    int32_t readInteger();
+
+    /**
+     * {@inheritDoc}
+     */
+    uint32_t readUnsignedInteger();
+
+    /**
+     * {@inheritDoc}
+     */
+    int64_t readLong();
+
+    /**
+     * {@inheritDoc}
+     */
+    uint64_t readUnsignedLong();
+
+    /**
+     * {@inheritDoc}
+     */
+    float readFloat();
+
+    /**
+     * {@inheritDoc}
+     */
+    double readDouble();
+
+    /**
+     * {@inheritDoc}
+     */
+    std::string readString();
+
+    /**
+     * {@inheritDoc}
+     */
+    std::u16string readUnicode();
+
+    /**
+     * {@inheritDoc}
+     */
+    size_t getLength();
+
+    /**
+     * {@inheritDoc}
+     */
+    void skipBytes(size_t length);
+
+    /**
+     * {@inheritDoc}
+     */
+    void setEndianness(bool isBigEndianness);
+
+    /**
+     * {@inheritDoc}
+     */
+    std::deque<int8_t> & getBuffer();
+private:
+    bool isBigEndianness_;
+    std::deque<int8_t> & buffer_;
+};
 
 } // namespace Ghrum
 
