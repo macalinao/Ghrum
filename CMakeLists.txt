@@ -42,6 +42,14 @@ IF (WIN32)
 	ADD_DEFINITIONS(-D_WIN32_WINNT=0x0501)				# Add Windows version.
 ENDIF()
 
+# Set compiler dependencies.
+IF (MINGW)
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static-libgcc")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
+    SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_C_FLAGS} -static-libgcc -s")
+    SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} -static-libgcc -static-libstdc++ -s")
+ENDIF()
+
 # Add executables.
 ADD_EXECUTABLE(Ghrum ${SOURCES})
 
