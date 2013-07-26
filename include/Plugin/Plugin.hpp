@@ -38,7 +38,7 @@ public:
     /**
      * Virtual constructor to allow derivated class to destruct.
      */
-    virtual ~Plugin() = default;
+    virtual ~Plugin();
 
     /**
      * Default callback to handle when the plugin has been

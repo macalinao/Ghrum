@@ -15,7 +15,6 @@
  */
 
 #include <Scheduler/Scheduler.hpp>
-#include <thread>
 #include <chrono>
 
 using namespace Ghrum;
@@ -51,7 +50,7 @@ void Scheduler::runMainThread() {
         // and get all syncronized task ready to be executed.
         {
             // =================== Lock ===================
-            std::lock_guard<std::mutex> lock(mutex_);
+            boost::mutex::scoped_lock lock(mutex_);
             // =================== Lock ===================
             if (!taskQueue_.empty())
                 runTaskParallel(syncronizedQueue);
@@ -75,8 +74,8 @@ void Scheduler::runMainThread() {
             = std::chrono::duration_cast<std::chrono::milliseconds>(endClock - startClock).count();
         overloaded_ = (differenceTime >= MILLISECOND_TICK);
         if (!overloaded_) {
-            std::this_thread::sleep_for(
-                std::chrono::milliseconds(MILLISECOND_TICK - differenceTime));
+            boost::this_thread::sleep(
+                boost::posix_time::milliseconds(MILLISECOND_TICK - differenceTime));
         }
         startClock = std::chrono::steady_clock::now();
     } while (active_);
@@ -152,7 +151,7 @@ void Scheduler::cancelAll() {
 ITask & Scheduler::syncRepeatingTask(IPlugin & owner, Delegate<void()> callback, TaskPriority priority, uint32_t delay,
                                      uint32_t period) {
     // =================== Lock ===================
-    std::lock_guard<std::mutex> lock(mutex_);
+    boost::mutex::scoped_lock lock(mutex_);
     // =================== Lock ===================
 
     std::shared_ptr<Task> task
@@ -168,7 +167,7 @@ ITask & Scheduler::syncRepeatingTask(IPlugin & owner, Delegate<void()> callback,
 /////////////////////////////////////////////////////////////////
 ITask & Scheduler::asyncDelayedTask(IPlugin & owner, Delegate<void()> callback, TaskPriority priority, uint32_t delay) {
     // =================== Lock ===================
-    std::lock_guard<std::mutex> lock(mutex_);
+    boost::mutex::scoped_lock lock(mutex_);
     // =================== Lock ===================
 
     std::shared_ptr<Task> task
@@ -184,7 +183,7 @@ ITask & Scheduler::asyncDelayedTask(IPlugin & owner, Delegate<void()> callback, 
 /////////////////////////////////////////////////////////////////
 ITask & Scheduler::asyncAnonymousTask(Delegate<void()> callback, TaskPriority priority) {
     // =================== Lock ===================
-    std::lock_guard<std::mutex> lock(mutex_);
+    boost::mutex::scoped_lock lock(mutex_);
     // =================== Lock ===================
 
     std::shared_ptr<Task> task
@@ -235,7 +234,7 @@ void Scheduler::runTaskQueue(std::queue<std::shared_ptr<Task>> & queue) {
         // then add it back into the task priority quere, otherwise stop it.
         if (task->isAlive() && task->isReapeating()) {
             // =================== Lock ===================
-            std::lock_guard<std::mutex> lock(mutex_);
+            boost::mutex::scoped_lock lock(mutex_);
             // =================== Lock ===================
             taskQueue_.push(task);
         }

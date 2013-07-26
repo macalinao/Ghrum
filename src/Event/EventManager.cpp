@@ -55,7 +55,7 @@ void EventManager::emitEventAsync(std::shared_ptr<Event> event, EventDelegate fu
 /////////////////////////////////////////////////////////////////
 void EventManager::remove(IPlugin & owner) {
     // =================== Lock ===================
-    std::lock_guard<std::mutex> lock(mutex_);
+    boost::mutex::scoped_lock lock(mutex_);
     // =================== Lock ===================
 
     if (plugin_.count(owner.getId()) == 0) {
@@ -77,7 +77,7 @@ void EventManager::remove(IPlugin & owner) {
 /////////////////////////////////////////////////////////////////
 void EventManager::removeAll() {
     // =================== Lock ===================
-    std::lock_guard<std::mutex> lock(mutex_);
+    boost::mutex::scoped_lock lock(mutex_);
     // =================== Lock ===================
 
     plugin_.clear();
@@ -113,7 +113,7 @@ bool EventManager::removeListener(IPlugin & owner, EventListener & listener) {
 /////////////////////////////////////////////////////////////////
 bool EventManager::addDelegate(IPlugin & owner, EventDelegate & callback, EventPriority priority, size_t id) {
     // =================== Lock ===================
-    std::lock_guard<std::mutex> lock(mutex_);
+    boost::mutex::scoped_lock lock(mutex_);
     // =================== Lock ===================
 
     std::unique_ptr<EventHandler> & handler = handler_[id];
@@ -132,7 +132,7 @@ bool EventManager::addDelegate(IPlugin & owner, EventDelegate & callback, EventP
 /////////////////////////////////////////////////////////////////
 bool EventManager::removeDelegate(IPlugin & owner, EventDelegate & callback, EventPriority priority, size_t id) {
     // =================== Lock ===================
-    std::lock_guard<std::mutex> lock(mutex_);
+    boost::mutex::scoped_lock lock(mutex_);
     // =================== Lock ===================
 
     std::unordered_map<size_t, std::unique_ptr<EventHandler>>::iterator it

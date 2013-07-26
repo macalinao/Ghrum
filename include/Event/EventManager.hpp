@@ -77,7 +77,7 @@ private:
      */
     typedef std::tuple<EventDelegate, EventPriority, size_t> ListTuple;
 protected:
-    std::mutex mutex_;
+    boost::mutex mutex_;
     std::unordered_map<size_t, std::vector<ListTuple>> plugin_;
     std::unordered_map<size_t, std::unique_ptr<EventHandler>> handler_;
 };

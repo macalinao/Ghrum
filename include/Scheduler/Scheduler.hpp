@@ -118,7 +118,7 @@ private:
      */
     void runTaskQueue(std::queue<std::shared_ptr<Task>> & queue);
 protected:
-    std::mutex mutex_;
+    boost::mutex mutex_;
     bool active_, overloaded_;
     size_t uptime_, thread_, iterationPerSecond_, nextTick_;
     TaskWorkerGroup workerGroup_;

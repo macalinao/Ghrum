@@ -163,7 +163,7 @@ bool PluginManager::load(const std::string & name) {
     }
 
     // =================== Lock ===================
-    std::lock_guard<std::mutex> lock(mutex_);
+    boost::mutex::scoped_lock lock(mutex_);
     // =================== Lock ===================
     plugins_.insert(
         std::pair<std::string, std::unique_ptr<Plugin>>(name, std::move(plugin)));
@@ -189,7 +189,7 @@ void PluginManager::enableAll(PluginOrder order) {
 /////////////////////////////////////////////////////////////////
 void PluginManager::unload(IPlugin & plugin) {
     // =================== Lock ===================
-    std::lock_guard<std::mutex> lock(mutex_);
+    boost::mutex::scoped_lock lock(mutex_);
     // =================== Lock ===================
 
     GhrumAPI::getScheduler().cancel(plugin);
@@ -202,7 +202,7 @@ void PluginManager::unload(IPlugin & plugin) {
 /////////////////////////////////////////////////////////////////
 void PluginManager::unloadAll() {
     // =================== Lock ===================
-    std::lock_guard<std::mutex> lock(mutex_);
+    boost::mutex::scoped_lock lock(mutex_);
     // =================== Lock ===================
 
     for (auto & plugin : plugins_) {
@@ -217,8 +217,9 @@ void PluginManager::unloadAll() {
 // {@see PluginManager::enable} /////////////////////////////////
 /////////////////////////////////////////////////////////////////
 void PluginManager::enable(IPlugin & plugin) {
-    if (plugin.isEnabled())
+    if (plugin.isEnabled()) {
         return;
+    }
     static_cast<Plugin &>(plugin).onEnable();
 }
 
@@ -226,8 +227,9 @@ void PluginManager::enable(IPlugin & plugin) {
 // {@see PluginManager::disable} ////////////////////////////////
 /////////////////////////////////////////////////////////////////
 void PluginManager::disable(IPlugin & plugin) {
-    if (!plugin.isEnabled())
+    if (!plugin.isEnabled()) {
         return;
+    }
     static_cast<Plugin &>(plugin).onDisable();
 }
 
@@ -245,7 +247,7 @@ void PluginManager::disableAll() {
 /////////////////////////////////////////////////////////////////
 void PluginManager::reload(IPlugin & plugin) {
     // =================== Lock ===================
-    std::lock_guard<std::mutex> lock(mutex_);
+    boost::mutex::scoped_lock lock(mutex_);
     // =================== Lock ===================
 
     // Check if the plugin can be reloaded.

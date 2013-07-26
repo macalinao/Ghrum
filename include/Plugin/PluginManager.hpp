@@ -109,7 +109,7 @@ public:
      */
     std::vector<IPlugin const *> getPlugins();
 protected:
-    std::mutex mutex_;
+    boost::mutex mutex_;
     std::string folder_;
     std::unordered_map<std::string, std::unique_ptr<Plugin>> plugins_;
 };
